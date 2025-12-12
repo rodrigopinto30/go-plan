@@ -9,7 +9,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center relative z-10">
           {/* left */}
           <div className="text-center sm:text-left">
-            <span className="text-gray-500 font-light tacking-wide mb-6">
+            <span className="text-gray-500 font-light tracking-wide mb-6">
               go plan <span className="text-purple-400">*</span>
             </span>
 
