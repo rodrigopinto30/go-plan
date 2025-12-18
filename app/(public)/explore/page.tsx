@@ -43,7 +43,7 @@ const ExplorePage = () => {
   const { data: localEvents, isLoading: loadingLocal } = useConvexQuery(
     api.explore.getFreaturedEvents,
     {
-      city: currentUser?.location?.city || "Gurugram",
+      city: currentUser?.location?.city || "Gurgaon",
       state: currentUser?.location?.state || "Haryana",
       limit: 4,
     }
@@ -236,8 +236,48 @@ const ExplorePage = () => {
       </div>
 
       {/* Popular Events Across Country */}
+      {popularEvents && popularEvents.length > 0 && (
+        <div className="mb-16">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold mb-1">
+              Popular Accross Argentina
+            </h2>
+            <p className="text-muted-foreground">Treading events nationwide</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {popularEvents.map((event: any) => (
+              <EventCard
+                key={event._id}
+                event={event}
+                variant="list"
+                onClick={() => handleEventClick(event.slug)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Empty State */}
+      {!loadingFeatured &&
+        !loadingLocal &&
+        !loadingPopular &&
+        (!featuredEvents || featuredEvents.length === 0) &&
+        (!localEvents || localEvents.length === 0) &&
+        (!popularEvents || popularEvents.length === 0) && (
+          <Card className="p-12 text-center">
+            <div className="max-w-md mx-auto space-y-4">
+              <div className="text-6xl mb-4">🎉</div>
+              <h2 className="text-2xl font-bold">No events yet</h2>
+              <p className="text-muted-foreground">
+                Be the first to create an event in your area!
+              </p>
+              <Button asChild className="gap-2">
+                <a href="/create-event">Create Event</a>
+              </Button>
+            </div>
+          </Card>
+        )}
     </>
   );
 };
