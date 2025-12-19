@@ -31,7 +31,7 @@ const DynamicExplorePage = () => {
   const router = useRouter();
 
   const slug = params.slug as string;
-
+  console.log(slug);
   const categoryInfo = CATEGORIES.find((cat) => cat.id === slug);
   const isCategory = !!categoryInfo;
 
@@ -106,6 +106,7 @@ const DynamicExplorePage = () => {
     );
   }
 
+  // 2:34:00
   return (
     <>
       <div className="pb-5">
