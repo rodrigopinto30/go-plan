@@ -72,7 +72,7 @@ const ExplorePage = () => {
   };
 
   const handleViewLocalEvents = () => {
-    const city = currentUser?.location?.city || "Gurugram";
+    const city = currentUser?.location?.city || "Gurgaon";
     const state = currentUser?.location?.state || "Haryana";
 
     const slug = createLocationSlug(city, state);
