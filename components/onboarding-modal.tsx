@@ -13,13 +13,24 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Progress } from "./ui/progress";
-import { ArrowRight, Heart, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, Heart, MapPin } from "lucide-react";
 import { CATEGORIES } from "@/lib/data";
 import { Badge } from "./ui/badge";
 import { useConvexMutation } from "@/hooks/use-convex-query";
 import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
+import { City, State } from "country-state-city";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export function OnboardingModal({
   isOpen,
@@ -46,6 +57,16 @@ export function OnboardingModal({
     api.users.completeOnboarding
   );
 
+  const indianStates = State.getStatesOfCountry("IN");
+
+  const cities = useMemo(() => {
+    if (!location.state) return [];
+    const selectedState = indianStates.find((s) => s.name === location.state);
+
+    if (!selectedState) return [];
+    return City.getCitiesOfState("IN", selectedState.isoCode);
+  }, [location.state, indianStates]);
+
   const toggleInterest = (categoryId: string) => {
     setSelectedInterests((prev: any) =>
       prev.includes(categoryId)
@@ -54,9 +75,41 @@ export function OnboardingModal({
     );
   };
 
-  console.log(isLoading);
+  const handleComplete = async () => {
+    try {
+      await completeOnboarding({
+        location: {
+          city: location.city,
+          state: location.state,
+          country: location.country,
+        },
+        interests: selectedInterests,
+      });
+      toast.success("Welcome to Go Plan!!!");
+      onComplete(true);
+    } catch (error) {
+      toast.error("Falied to complete onboarding");
+      console.log(error);
+    }
+  };
 
-  const handleNext = () => {};
+  const handleNext = () => {
+    if (step === 1 && selectedInterests.length < 3) {
+      toast.error("Plase select at least 3 interests");
+      return;
+    }
+
+    if (step === 2 && (!location.city || !location.state)) {
+      toast.error("Please select both state and city");
+      return;
+    }
+
+    if (step < 2) {
+      setStep(step + 1);
+    } else {
+      handleComplete();
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -93,7 +146,7 @@ export function OnboardingModal({
                     key={category.id}
                     onClick={() => toggleInterest(category.id)}
                     className={`p-4 rounded-lg border-2 transition-all hover:scale-105 ${
-                      selectedInterests.includes(category.id as string)
+                      selectedInterests.includes(category.id as never)
                         ? "border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/20"
                         : "border-border hover:border-purple-300"
                     }`}
@@ -120,8 +173,92 @@ export function OnboardingModal({
               </div>
             </div>
           )}
+
+          {step === 2 && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="state">State</Label>
+                  <Select
+                    value={location.state}
+                    onValueChange={(value) => {
+                      setLocation({ ...location, state: value, city: "" });
+                    }}
+                  >
+                    <SelectTrigger id="state" className="h-11 w-full">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {indianStates.map((state) => (
+                        <SelectItem key={state.isoCode} value={state.name}>
+                          {state.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Select
+                    value={location.city}
+                    onValueChange={(value) => {
+                      setLocation({ ...location, city: value });
+                    }}
+                    disabled={!location.state}
+                  >
+                    <SelectTrigger id="city" className="h-11 w-full">
+                      <SelectValue
+                        placeholder={
+                          location.state ? "Select city" : "State first"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cities.length > 0 ? (
+                        cities.map((city) => (
+                          <SelectItem key={city.name} value={city.name}>
+                            {city.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-cities" disabled>
+                          No cities available
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {location.city && location.state && (
+                <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-purple-500 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Your location</p>
+                      <p className="text-sm text-muted-foreground">
+                        {location.city}, {location.state}, {location.country}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
         <DialogFooter className="flex gap-3">
+          {step > 1 && (
+            <Button
+              variant="outline"
+              onClick={() => setStep(step - 1)}
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+          )}
           <Button
             className="flex-1 gap-2"
             disabled={isLoading}
