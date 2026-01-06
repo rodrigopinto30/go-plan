@@ -11,6 +11,7 @@ import { useState } from "react";
 import { Building, Plus, Ticket } from "lucide-react";
 import { OnboardingModal } from "./onboarding-modal";
 import { useOnboardin } from "@/hooks/use-onboarding";
+import SearchLocationBar from "./search-location-bar";
 
 const Header = () => {
   const { isLoading } = useStoreUser();
@@ -37,7 +38,9 @@ const Header = () => {
           </Link>
 
           {/* Search and Location - Desktop Only */}
-
+          <div className="hidden md:flex flex-1 justify-center">
+            <SearchLocationBar />
+          </div>
           {/* Right Side Actions */}
 
           <div className="flex items-center">
@@ -85,6 +88,9 @@ const Header = () => {
         </div>
 
         {/* Mobile Search and Location - Below Header */}
+        <div className="md:hidden border-t px-3 py-3">
+          <SearchLocationBar />
+        </div>
 
         {/* Loader */}
         {isLoading && (
