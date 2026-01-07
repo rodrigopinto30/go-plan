@@ -12,6 +12,14 @@ import debounce from "lodash/debounce";
 import { getCategoryIcon } from "@/lib/data";
 import { format } from "date-fns";
 import { Badge } from "./ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { createLocationSlug } from "@/lib/location-utils";
 
 const SearchLocationBar = () => {
   const router = useRouter();
@@ -42,7 +50,7 @@ const SearchLocationBar = () => {
     const state = indianStates.find((s) => s.name === selectedState);
 
     if (!state) return [];
-    return City.getCitiesOfState("IN", String(state));
+    return City.getCitiesOfState("IN", String(state.isoCode));
   }, [selectedState, indianStates]);
 
   const debouncedSetQuery = useRef(
@@ -51,7 +59,6 @@ const SearchLocationBar = () => {
 
   const handleSearchInput = (e: any) => {
     const value = e.target.value;
-    console.log(searchResults);
     debouncedSetQuery(value);
     setShowSearchResults(value.length >= 2);
   };
@@ -60,6 +67,22 @@ const SearchLocationBar = () => {
     setShowSearchResults(false);
     setSearchQuery("");
     router.push(`/events/${slug}`);
+  };
+
+  const handleLocationSelect = async (city: string, state: string) => {
+    try {
+      if (currentUser?.interests && currentUser?.location) {
+        await updateLocation({
+          location: { city, state, country: "India" },
+          interests: currentUser.interests,
+        });
+      }
+
+      const slug = createLocationSlug(city, state);
+      router.push(`/explore/${slug}`);
+    } catch (error) {
+      console.error("Failed to update location: ", error);
+    }
   };
 
   useEffect(() => {
@@ -153,6 +176,53 @@ const SearchLocationBar = () => {
           </div>
         )}
       </div>
+
+      <Select
+        value={selectedState}
+        onValueChange={(value) => {
+          setSelectedState(value);
+          setSelectedCity("");
+        }}
+      >
+        <SelectTrigger className="w-32 h-9 border-1-0 rounded-none">
+          <SelectValue placeholder="State" />
+        </SelectTrigger>
+        <SelectContent>
+          {indianStates.map((state) => (
+            <SelectItem key={state.isoCode} value={state.name}>
+              {state.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={selectedCity}
+        onValueChange={(value) => {
+          setSelectedCity(value);
+          if (value && selectedState) {
+            handleLocationSelect(value, selectedState);
+          }
+        }}
+        disabled={!selectedState}
+      >
+        <SelectTrigger className="w-32 h-9 rounded-none rounded-r-md">
+          <SelectValue placeholder="City" />
+        </SelectTrigger>
+        <SelectContent>
+          {cities.length > 0 ? (
+            cities.map((city) => (
+              <SelectItem key={city.name} value={city.name}>
+                {city.name}
+              </SelectItem>
+            ))
+          ) : (
+            <SelectItem value="no-cities" disabled>
+              No cities available
+            </SelectItem>
+          )}
+        </SelectContent>
+      </Select>
     </div>
   );
 };

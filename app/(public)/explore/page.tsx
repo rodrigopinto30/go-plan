@@ -55,7 +55,7 @@ const ExplorePage = () => {
   );
 
   const { data: categoryCounts } = useConvexQuery(
-    api.explore.getEventsByCategory
+    api.explore.getCategoryCounts
   );
 
   const categoriesWithCounts = CATEGORIES.map((cat: category) => ({
@@ -64,11 +64,11 @@ const ExplorePage = () => {
   }));
 
   const handleEventClick = (slug: string) => {
-    router.push(`/explore/${slug}`);
+    router.push(`/events/${slug}`);
   };
 
   const handleCategoryClick = (categoryId: string) => {
-    router.push(`/events/${categoryId}`);
+    router.push(`/explore/${categoryId}`);
   };
 
   const handleViewLocalEvents = () => {
